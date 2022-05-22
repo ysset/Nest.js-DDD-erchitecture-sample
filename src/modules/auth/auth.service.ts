@@ -74,4 +74,10 @@ export class AuthService {
       }
     });
   }
+
+  async checkLogin({ req, res }) {
+    const { user } = req.body;
+    const userData = await this.model.findById(user._id);
+    res.send(userData);
+  }
 }
