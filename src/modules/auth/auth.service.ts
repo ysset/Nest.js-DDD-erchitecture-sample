@@ -15,6 +15,13 @@ export class AuthService {
   ) {}
   async signUp({ body, res }) {
     const { login, password } = body;
+    if (!login || login.length < 3 || login.length > 15) {
+      return res.status(400).send({ error: 'invalid login' });
+    }
+
+    if (!password || password.length < 6 || password.length > 20) {
+      return res.status(400).send({ error: 'invalid login' });
+    }
 
     bcrypt.hash(password, saltRounds, async (err, hash) => {
       if (err) {
