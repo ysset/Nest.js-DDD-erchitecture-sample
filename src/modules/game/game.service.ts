@@ -4,11 +4,12 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Game, GameDocument } from '../../mongo.models/gameState.model';
 
-const countBalance = ({ price, balance }) => {
+const countBalance = ({ count, balance }) => {
+  const price = 100;
   if (price > balance) {
     return false;
   }
-  return balance - price;
+  return balance - price * count;
 };
 
 const createMatrix = ({ sort, taskNumber }) => {
@@ -52,11 +53,10 @@ export class GameService {
   }
 
   async buy({ req, res }) {
-    const { user, price } = req.body;
+    const { user, count } = req.body;
     const userData = await this.getUser({ req, res });
 
-    const balance = countBalance({ price, balance: userData.balance });
-
+    const balance = countBalance({ count, balance: userData.balance });
     if (balance) {
       await this.userModel.updateOne(
         { _id: user._id },
@@ -65,9 +65,9 @@ export class GameService {
           cardCount: userData.cardCount + 1,
         },
       );
-
       return res.send({ ok: true });
     }
+    return res.status(500).send({ error: 'error' });
   }
 
   async createCard({ req, res }) {
