@@ -11,6 +11,9 @@ export class Game {
     taskNumber: Number,
   };
 
+  @Prop({ default: false })
+  complete: boolean;
+
   @Prop()
   opened: [[], [], []];
 

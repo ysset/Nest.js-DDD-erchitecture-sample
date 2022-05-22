@@ -141,7 +141,7 @@ export class GameService {
       cell: { str, coll },
     } = req.body;
     const userData = await this.getUser({ req, res });
-    const cardData = userData.gameState;
+    const cardData = userData.gameState.find((el) => el._id.toString() === id);
 
     if (!cardData) {
       return res.status(400).send(JSON.stringify({ error: 'Card not fined' }));
@@ -161,5 +161,29 @@ export class GameService {
     opened[str][coll] = cardData.card.fields[str][coll];
     await this.gameModel.updateOne({ _id: id }, { opened });
     return res.send(opened);
+  }
+
+  async completeGame({ req, res }) {
+    const { id, user } = req.body;
+    let money = 0;
+    const userData = await this.getUser({ req, res });
+    const cardData = userData.gameState.find((el) => el._id.toString() === id);
+
+    if (!cardData) {
+      return res.status(400).send(JSON.stringify({ error: 'Card not fined' }));
+    }
+
+    if (cardData.complete) {
+      return res.status(400).send({ error: 'Game has already complete ' });
+    }
+
+    cardData.opened.flat().forEach((el) => (money += el));
+
+    await this.userModel.updateOne(
+      { _id: user._id },
+      { balance: (userData.balance += money) },
+    );
+
+    return res.send({ ok: true });
   }
 }

@@ -21,8 +21,13 @@ export class GameController {
     await this.gameStateService.cell({ req, res });
   }
 
-  @Post('start')
+  @Get('start')
   async createCard(@Req() req: Request, @Res() res: Response) {
     await this.gameStateService.createCard({ req, res });
+  }
+
+  @Post('end')
+  async completeGame(@Req() req: Request, @Res() res: Response) {
+    await this.gameStateService.completeGame({ req, res });
   }
 }
