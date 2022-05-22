@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
+import { GameSchema } from './gameState.model';
 
 export type UserDocument = User & Document;
 
@@ -17,7 +18,7 @@ export class User {
   @Prop({ required: true })
   cardCount: number;
 
-  @Prop({ type: Array, ref: 'Game' })
+  @Prop({ type: Array, ref: 'Game', schema: GameSchema })
   gameState: any;
 }
 

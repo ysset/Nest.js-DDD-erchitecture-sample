@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { User, UserDocument } from '../../mongo.models/user.model';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { Game, GameDocument } from '../../mongo.models/gameState.model';
 
 const countBalance = ({ price, balance }) => {
   if (price > balance) {
@@ -28,19 +29,30 @@ const createMatrix = ({ sort, taskNumber }) => {
 export class GameService {
   constructor(
     @InjectModel(User.name) private readonly model: Model<UserDocument>,
+    @InjectModel(Game.name) private readonly gameModel: Model<GameDocument>,
   ) {}
-  async state({ req, res }) {
+
+  private async getUser({ req, res }) {
     const { user } = req.body;
     if (!user._id) {
       return res.status(500).send({ error: 'User id is undefined' });
     }
-    const userData = await this.model.findById(user._id);
+    return this.model.findById(user._id).populate('gameState');
+  }
+
+  async state({ req, res }) {
+    const userData = await this.getUser({ req, res });
     res.send(JSON.stringify(userData.gameState));
+  }
+
+  async balance({ req, res }) {
+    const userData = await this.getUser({ req, res });
+    return res.send(userData.balance);
   }
 
   async buy({ req, res }) {
     const { user, price } = req.body;
-    const userData = await this.model.findById(user._id);
+    const userData = await this.getUser({ req, res });
 
     const balance = countBalance({ price, balance: userData.balance });
 
@@ -58,8 +70,7 @@ export class GameService {
   }
 
   async createCard({ req, res }) {
-    const { user } = req.body;
-    const userData = await this.model.findById(user._id);
+    const userData = await this.getUser({ req, res });
     if (!userData.cardCount) {
       return res.status(400).send({ error: 'No more cards' });
     }
@@ -97,6 +108,15 @@ export class GameService {
         });
         break;
     }
+
+    await this.gameModel.create({
+      card: {
+        fields: matrix,
+        taskNumber,
+      },
+      opened: [],
+      win: false,
+    });
     return res.send(JSON.stringify(matrix));
   }
 }

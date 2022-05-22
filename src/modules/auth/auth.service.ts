@@ -11,7 +11,7 @@ const jwtSecret = process.env.JWT_SECRET;
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectModel(User.name) private readonly model: Model<UserDocument>,
+    @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
   ) {}
   async signUp({ body, res }) {
     const { login, password } = body;
@@ -20,7 +20,7 @@ export class AuthService {
     }
 
     if (!password || password.length < 6 || password.length > 20) {
-      return res.status(400).send({ error: 'invalid login' });
+      return res.status(400).send({ error: 'invalid password' });
     }
 
     bcrypt.hash(password, saltRounds, async (err, hash) => {
@@ -28,11 +28,11 @@ export class AuthService {
         return res.status(400).send(err.message);
       }
 
-      const user = await this.model.create({
+      const user = await this.userModel.create({
         login,
         password: hash,
+        cardCount: 0,
         balance: 0,
-        gameState: [],
       });
 
       const jwtData = {
@@ -51,7 +51,7 @@ export class AuthService {
 
   async signIn({ body, res }) {
     const { login, password } = body;
-    const userData = await this.model.findOne({ login });
+    const userData = await this.userModel.findOne({ login });
     if (!userData) {
       return res.status(400).send({
         message: 'User not found',
@@ -73,7 +73,7 @@ export class AuthService {
 
   async checkLogin({ req, res }) {
     const { user } = req.body;
-    const userData = await this.model.findById(user._id);
+    const userData = await this.userModel.findById(user._id);
     res.send(userData);
   }
 }

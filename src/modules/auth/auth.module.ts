@@ -17,7 +17,7 @@ export class AuthModule implements NestModule {
   configure(consumer: MiddlewareConsumer): any {
     consumer
       .apply(jwtVerify)
-      .exclude('auth/signin', 'auth/signup')
+      .exclude('api/signin', 'api/signup')
       .forRoutes(AuthController);
   }
 }
