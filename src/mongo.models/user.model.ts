@@ -1,10 +1,10 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 
-export type UserDocument = user & Document;
+export type UserDocument = User & Document;
 
 @Schema()
-export class user {
+export class User {
   @Prop({ required: true })
   username: string;
 
@@ -17,14 +17,11 @@ export class user {
   @Prop({ requuired: true })
   balance: number;
 
-  @Prop({ type: Array, required: true })
-  gameState = [
-    {
-      card: Array,
-      opened: Array,
-      win: Boolean,
-    },
-  ];
+  @Prop({ required: true })
+  cardCount: number;
+
+  @Prop({ type: Array, ref: 'Game' })
+  gameState: any;
 }
 
-export const UserSchema = SchemaFactory.createForClass(user);
+export const UserSchema = SchemaFactory.createForClass(User);

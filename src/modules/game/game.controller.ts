@@ -1,0 +1,28 @@
+import { Post, Get, Controller, Req, Res } from '@nestjs/common';
+import { GameService } from './game.service';
+import { Request, Response } from 'express';
+
+@Controller('api')
+export class GameController {
+  constructor(private gameStateService: GameService) {}
+
+  @Get('state')
+  async state(@Req() req: Request, @Res() res: Response) {
+    await this.gameStateService.state({ req, res });
+  }
+
+  @Post('buy')
+  async buy(@Req() req: Request, @Res() res: Response) {
+    await this.gameStateService.buy({ req, res });
+  }
+
+  @Post('open')
+  async open() {
+    return;
+  }
+
+  @Post('start')
+  async createCard(@Req() req: Request, @Res() res: Response) {
+    await this.gameStateService.createCard({ req, res });
+  }
+}
