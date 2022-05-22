@@ -14,7 +14,7 @@ export class AuthService {
     @InjectModel(User.name) private readonly model: Model<UserDocument>,
   ) {}
   async signUp({ body, res }) {
-    const { username, email, password } = body;
+    const { login, password } = body;
 
     bcrypt.hash(password, saltRounds, async (err, hash) => {
       if (err) {
@@ -22,16 +22,14 @@ export class AuthService {
       }
 
       const user = await this.model.create({
-        username,
+        login,
         password: hash,
-        email,
         balance: 0,
         gameState: [],
       });
 
       const jwtData = {
-        username,
-        email,
+        login,
         _id: user._id,
       };
 
@@ -45,17 +43,8 @@ export class AuthService {
   }
 
   async signIn({ body, res }) {
-    const { username, email, password } = body;
-    const userData = await this.model.findOne({
-      $or: [
-        {
-          email,
-        },
-        {
-          username,
-        },
-      ],
-    });
+    const { login, password } = body;
+    const userData = await this.model.findOne({ login });
     if (!userData) {
       return res.status(400).send({
         message: 'User not found',
