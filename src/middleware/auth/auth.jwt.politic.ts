@@ -10,7 +10,8 @@ export default class LoggerMiddleware implements NestMiddleware {
   use(req: Request, res: Response, next: NextFunction) {
     const jwt = req.headers.Authorisation;
     jsonwebtoken.verify(jwt, jwtSecret, (err, decoded) => {
-      if (err) res.status(405).send(err);
+      console.log(err);
+      if (err) return res.status(405).send(err.message);
       req.body.user = decoded;
       next();
     });

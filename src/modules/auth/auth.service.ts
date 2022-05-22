@@ -34,6 +34,7 @@ export class AuthService {
         email,
         _id: user._id,
       };
+
       jsonwebtoken.sign(JSON.stringify(jwtData), jwtSecret, (err, token) => {
         if (err) {
           return res.status(400).send(err.message);

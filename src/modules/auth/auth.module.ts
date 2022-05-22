@@ -13,11 +13,11 @@ import { MongooseModule } from '@nestjs/mongoose';
     MongooseModule.forFeature([{ name: user.name, schema: UserSchema }]),
   ],
 })
-export default class AuthModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
+export class AuthModule implements NestModule {
+  configure(consumer: MiddlewareConsumer): any {
     consumer
       .apply(jwtVerify)
-      .exclude('signin', 'signup')
-      .forRoutes(AuthService);
+      .exclude('auth/signin', 'auth/signup')
+      .forRoutes(AuthController);
   }
 }
