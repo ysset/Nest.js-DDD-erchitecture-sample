@@ -134,4 +134,32 @@ export class GameService {
 
     return res.send(JSON.stringify(matrix));
   }
+
+  async cell({ req, res }) {
+    const {
+      id,
+      cell: { str, coll },
+    } = req.body;
+    const userData = await this.getUser({ req, res });
+    const cardData = userData.gameState;
+
+    if (!cardData) {
+      return res.status(400).send(JSON.stringify({ error: 'Card not fined' }));
+    }
+
+    const opened = cardData.opened;
+
+    if (opened[str] && opened[str][coll]) {
+      return res.status(400).send({ error: 'Cell has already opened' });
+    }
+    if (opened[str]) {
+      opened[str][coll] = cardData.card.fields[str][coll];
+      await this.gameModel.updateOne({ _id: id }, { opened });
+      return res.send(opened);
+    }
+    opened[str] = [];
+    opened[str][coll] = cardData.card.fields[str][coll];
+    await this.gameModel.updateOne({ _id: id }, { opened });
+    return res.send(opened);
+  }
 }

@@ -16,9 +16,9 @@ export class GameController {
     await this.gameStateService.buy({ req, res });
   }
 
-  @Post('open')
-  async open() {
-    return;
+  @Post('cell')
+  async cell(@Req() req: Request, @Res() res: Response) {
+    await this.gameStateService.cell({ req, res });
   }
 
   @Post('start')
