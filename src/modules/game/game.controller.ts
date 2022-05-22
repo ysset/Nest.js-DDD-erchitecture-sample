@@ -11,11 +11,6 @@ export class GameController {
     await this.gameStateService.state({ req, res });
   }
 
-  @Get('balance')
-  async balance(@Req() req: Request, @Res() res: Response) {
-    await this.gameStateService.balance({ req, res });
-  }
-
   @Post('buy')
   async buy(@Req() req: Request, @Res() res: Response) {
     await this.gameStateService.buy({ req, res });

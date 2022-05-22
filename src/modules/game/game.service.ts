@@ -8,7 +8,6 @@ const countBalance = ({ price, balance }) => {
   if (price > balance) {
     return false;
   }
-
   return balance - price;
 };
 
@@ -18,8 +17,8 @@ const createMatrix = ({ sort, taskNumber }) => {
     arr[strokeEl] = [];
     for (let collEl = 0; collEl < 3; collEl++) {
       sort({ strokeEl, collEl })
-        ? arr[strokeEl][collEl].push(taskNumber)
-        : Math.round(Math.random());
+        ? arr[strokeEl].push(taskNumber)
+        : arr[strokeEl].push(Math.round(Math.random() * 10));
     }
   }
   return arr;
@@ -28,7 +27,7 @@ const createMatrix = ({ sort, taskNumber }) => {
 @Injectable()
 export class GameService {
   constructor(
-    @InjectModel(User.name) private readonly model: Model<UserDocument>,
+    @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
     @InjectModel(Game.name) private readonly gameModel: Model<GameDocument>,
   ) {}
 
@@ -37,17 +36,19 @@ export class GameService {
     if (!user._id) {
       return res.status(500).send({ error: 'User id is undefined' });
     }
-    return this.model.findById(user._id).populate('gameState');
+    return this.userModel.findById(user._id).populate('gameState');
   }
 
   async state({ req, res }) {
     const userData = await this.getUser({ req, res });
-    res.send(JSON.stringify(userData.gameState));
-  }
+    console.log(userData.gameState);
+    const gameState = {
+      game: userData.gameState,
+      balance: userData.balance,
+      cards: userData.cardCount,
+    };
 
-  async balance({ req, res }) {
-    const userData = await this.getUser({ req, res });
-    return res.send(userData.balance);
+    res.send(JSON.stringify(gameState));
   }
 
   async buy({ req, res }) {
@@ -57,7 +58,7 @@ export class GameService {
     const balance = countBalance({ price, balance: userData.balance });
 
     if (balance) {
-      await this.model.updateOne(
+      await this.userModel.updateOne(
         { _id: user._id },
         {
           balance,
@@ -71,15 +72,18 @@ export class GameService {
 
   async createCard({ req, res }) {
     const userData = await this.getUser({ req, res });
+    let matrix;
+
     if (!userData.cardCount) {
       return res.status(400).send({ error: 'No more cards' });
     }
+
     const taskNumber = Math.round(Math.random() * 100);
-    const typeMatrix = Math.round(Math.random() * 3);
+    const typeMatrix = Math.round(Math.random() * 2);
     // 0 - diagonal
     // 1 - horizontal
     // 2 - vertical
-    let matrix;
+
     switch (typeMatrix) {
       case 0:
         const type = Math.round(Math.random() * 2);
@@ -94,14 +98,14 @@ export class GameService {
         }
         break;
       case 1:
-        const stroke = Math.round(Math.random() * 3);
+        const stroke = Math.round(Math.random() * 2);
         matrix = createMatrix({
           sort: ({ strokeEl }) => strokeEl === stroke,
           taskNumber,
         });
         break;
       case 2:
-        const coll = Math.round(Math.random() * 3);
+        const coll = Math.round(Math.random() * 2);
         matrix = createMatrix({
           sort: ({ collEl }) => collEl === coll,
           taskNumber,
@@ -109,7 +113,7 @@ export class GameService {
         break;
     }
 
-    await this.gameModel.create({
+    const card = await this.gameModel.create({
       card: {
         fields: matrix,
         taskNumber,
@@ -117,6 +121,17 @@ export class GameService {
       opened: [],
       win: false,
     });
+
+    await this.userModel.updateOne(
+      { _id: userData._id },
+      {
+        cardCount: userData.cardCount - 1,
+        $push: {
+          gameState: card.id,
+        },
+      },
+    );
+
     return res.send(JSON.stringify(matrix));
   }
 }
