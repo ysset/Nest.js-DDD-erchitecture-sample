@@ -13,22 +13,28 @@ export class AuthService {
   constructor(
     @InjectModel(user.name) private readonly model: Model<UserDocument>,
   ) {}
-  signUp({ body, res }) {
+  async signUp({ body, res }) {
     const { username, email, password } = body;
 
-    bcrypt.hash(password, saltRounds, (err, hash) => {
+    bcrypt.hash(password, saltRounds, async (err, hash) => {
       if (err) {
         return res.status(400).send(err.message);
       }
 
-      const user = this.model.create({
+      const user = await this.model.create({
         username,
         password: hash,
         email,
         balance: 0,
         gameState: [],
       });
-      jsonwebtoken.sign(JSON.stringify(user), jwtSecret, (err, token) => {
+
+      const jwtData = {
+        username,
+        email,
+        _id: user._id,
+      };
+      jsonwebtoken.sign(JSON.stringify(jwtData), jwtSecret, (err, token) => {
         if (err) {
           return res.status(400).send(err.message);
         }
