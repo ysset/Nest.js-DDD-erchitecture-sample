@@ -2,16 +2,12 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import jwtVerify from '../../middleware/auth/auth.jwt.politic';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
-
-import { User, UserSchema } from '../../mongo.models/user.model';
-import { MongooseModule } from '@nestjs/mongoose';
+import { MongoModule } from '../mongo/methods.module';
 
 @Module({
   controllers: [AuthController],
   providers: [AuthService],
-  imports: [
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
-  ],
+  imports: [MongoModule],
 })
 export class AuthModule implements NestModule {
   configure(consumer: MiddlewareConsumer): any {

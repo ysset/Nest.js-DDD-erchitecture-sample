@@ -1,9 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { User, UserDocument } from '../../mongo.models/user.model';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { Game, GameDocument } from '../../mongo.models/gameState.model';
 import { UserInterface } from '../../interface/user.interface';
+import { GameModelMethods, UserModelMethods } from '../mongo/methods.service';
 
 const countBalance = ({ count, balance }) => {
   const price = 100;
@@ -34,8 +31,8 @@ interface responseData {
 @Injectable()
 export class GameService {
   constructor(
-    @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
-    @InjectModel(Game.name) private readonly gameModel: Model<GameDocument>,
+    private readonly userModel: UserModelMethods,
+    private readonly gameModel: GameModelMethods,
   ) {}
 
   private async getUser({ user }): Promise<UserInterface> {

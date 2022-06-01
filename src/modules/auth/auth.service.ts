@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import * as jsonwebtoken from 'jsonwebtoken';
 import * as bcrypt from 'bcrypt';
-import { User, UserDocument } from '../../mongo.models/user.model';
+import { UserModelMethods } from '../mongo/methods.service';
 import { InjectModel } from '@nestjs/mongoose';
+import { User, UserDocument } from '../../mongo.models/user.model';
 import { Model } from 'mongoose';
 
 const saltRounds = parseFloat(process.env.SALT);
@@ -16,7 +17,7 @@ interface promiseResponse {
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
+    private readonly userModel: UserModelMethods, // @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
   ) {}
 
   /**
@@ -25,6 +26,7 @@ export class AuthService {
    */
 
   async signUp({ login, password }) {
+    console.log(this);
     if (!login || login.length < 3 || login.length > 15) {
       return {
         data: { message: 'invalid login' },
