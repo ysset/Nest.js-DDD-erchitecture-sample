@@ -3,10 +3,11 @@ import { User, UserDocument } from '../../mongo.models/user.model';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Game, GameDocument } from '../../mongo.models/gameState.model';
+import { UserInterface } from '../../interface/user.interface';
 
 const countBalance = ({ count, balance }) => {
   const price = 100;
-  if (price > balance) {
+  if (price > balance * count) {
     return false;
   }
   return balance - price * count;
@@ -25,6 +26,11 @@ const createMatrix = ({ sort, taskNumber }) => {
   return arr;
 };
 
+interface responseData {
+  data: object;
+  code: number;
+}
+
 @Injectable()
 export class GameService {
   constructor(
@@ -32,29 +38,32 @@ export class GameService {
     @InjectModel(Game.name) private readonly gameModel: Model<GameDocument>,
   ) {}
 
-  private async getUser({ req, res }) {
-    const { user } = req.body;
+  private async getUser({ user }): Promise<UserInterface> {
     if (!user._id) {
-      return res.status(500).send({ error: 'User id is undefined' });
+      throw {
+        message: 'User id is undefined',
+        code: 500,
+      };
     }
     return this.userModel.findById(user._id).populate('gameState');
   }
 
-  async state({ req, res }) {
-    const userData = await this.getUser({ req, res });
-    console.log(userData.gameState);
+  async state({ user }): Promise<responseData> {
+    const userData = await this.getUser({ user });
     const gameState = {
       game: userData.gameState,
       balance: userData.balance,
       cards: userData.cardCount,
     };
 
-    res.send(JSON.stringify(gameState));
+    return {
+      code: 200,
+      data: { gameState },
+    };
   }
 
-  async buy({ req, res }) {
-    const { user, count } = req.body;
-    const userData = await this.getUser({ req, res });
+  async buy({ user, count }): Promise<responseData> {
+    const userData = await this.getUser({ user });
 
     const balance = countBalance({ count, balance: userData.balance });
     if (balance) {
@@ -65,17 +74,62 @@ export class GameService {
           cardCount: userData.cardCount + 1,
         },
       );
-      return res.send({ ok: true });
+      return {
+        code: 200,
+        data: { ok: true },
+      };
     }
-    return res.status(500).send({ error: 'error' });
+    return {
+      code: 400,
+      data: { message: 'Balance over' },
+    };
   }
 
-  async createCard({ req, res }) {
-    const userData = await this.getUser({ req, res });
+  async cell({ id, cell: { str, coll }, user }) {
+    const userData = await this.getUser({ user });
+    const cardData = userData.gameState.find((el) => el._id.toString() === id);
+
+    if (!cardData) {
+      return {
+        data: { message: 'Card not fined' },
+        code: 400,
+      };
+    }
+
+    const opened = cardData.opened;
+
+    if (opened[str] && opened[str][coll]) {
+      return {
+        data: { message: 'Cell has already opened' },
+        code: 400,
+      };
+    }
+    if (opened[str]) {
+      opened[str][coll] = cardData.card.fields[str][coll];
+      await this.gameModel.updateOne({ _id: id }, { opened });
+      return {
+        data: { opened },
+        code: 200,
+      };
+    }
+    opened[str] = [];
+    opened[str][coll] = cardData.card.fields[str][coll];
+    await this.gameModel.updateOne({ _id: id }, { opened });
+    return {
+      data: { opened },
+      code: 200,
+    };
+  }
+
+  async createCard({ user }) {
+    const userData = await this.getUser({ user });
     let matrix;
 
     if (!userData.cardCount) {
-      return res.status(400).send({ error: 'No more cards' });
+      return {
+        code: 400,
+        data: { error: 'No more cards' },
+      };
     }
 
     const taskNumber = Math.round(Math.random() * 100);
@@ -132,49 +186,29 @@ export class GameService {
       },
     );
 
-    return res.send(JSON.stringify(matrix));
+    return {
+      data: { matrix },
+      code: 200,
+    };
   }
 
-  async cell({ req, res }) {
-    const {
-      id,
-      cell: { str, coll },
-    } = req.body;
-    const userData = await this.getUser({ req, res });
-    const cardData = userData.gameState.find((el) => el._id.toString() === id);
-
-    if (!cardData) {
-      return res.status(400).send(JSON.stringify({ error: 'Card not fined' }));
-    }
-
-    const opened = cardData.opened;
-
-    if (opened[str] && opened[str][coll]) {
-      return res.status(400).send({ error: 'Cell has already opened' });
-    }
-    if (opened[str]) {
-      opened[str][coll] = cardData.card.fields[str][coll];
-      await this.gameModel.updateOne({ _id: id }, { opened });
-      return res.send(opened);
-    }
-    opened[str] = [];
-    opened[str][coll] = cardData.card.fields[str][coll];
-    await this.gameModel.updateOne({ _id: id }, { opened });
-    return res.send(opened);
-  }
-
-  async completeGame({ req, res }) {
-    const { id, user } = req.body;
+  async completeGame({ id, user }) {
     let money = 0;
-    const userData = await this.getUser({ req, res });
+    const userData = await this.getUser({ user });
     const cardData = userData.gameState.find((el) => el._id.toString() === id);
 
     if (!cardData) {
-      return res.status(400).send(JSON.stringify({ error: 'Card not fined' }));
+      return {
+        data: { message: 'Card not fined' },
+        code: 400,
+      };
     }
 
     if (cardData.complete) {
-      return res.status(400).send({ error: 'Game has already complete ' });
+      return {
+        data: { messaqge: 'Game has already complete ' },
+        code: 400,
+      };
     }
 
     cardData.opened.flat().forEach((el) => (money += el));
@@ -184,6 +218,9 @@ export class GameService {
       { balance: (userData.balance += money) },
     );
 
-    return res.send({ ok: true });
+    return {
+      data: { ok: true },
+      code: 200,
+    };
   }
 }
