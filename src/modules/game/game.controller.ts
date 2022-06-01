@@ -13,7 +13,7 @@ export class GameController {
       res.status(code).send(data);
     } catch (e) {
       console.error(e);
-      res.status(500).send(e.message);
+      res.status(500).send({ message: e.message });
     }
   }
 
@@ -24,7 +24,7 @@ export class GameController {
       res.status(code).send(data);
     } catch (e) {
       console.error(e);
-      res.status(500).send(e.message);
+      res.status(500).send({ message: e.message });
     }
   }
 
@@ -50,7 +50,7 @@ export class GameController {
       res.status(code).send(data);
     } catch (e) {
       console.error(e);
-      res.status(500).send(e.message);
+      res.status(500).send({ message: e.message });
     }
   }
 
@@ -64,7 +64,7 @@ export class GameController {
       res.status(code).send(data);
     } catch (e) {
       console.error(e);
-      res.status(500).send(e.message);
+      res.status(500).send({ message: e.message });
     }
   }
 }

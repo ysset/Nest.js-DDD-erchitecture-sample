@@ -13,7 +13,7 @@ export class AuthController {
       res.status(code).send(data);
     } catch (e) {
       console.log(e);
-      res.status(500).send(e.message);
+      res.status(500).send({ message: e.message });
     }
   }
 
@@ -24,13 +24,18 @@ export class AuthController {
       res.status(code).send(data);
     } catch (e) {
       console.log(e);
-      res.status(500).send(e.message);
+      res.status(500).send({ message: e.message });
     }
   }
 
   @Get('check')
   async authCheck(@Body() { user }, @Res() res: Response) {
-    const { data, code } = await this.authService.checkLogin({ user });
-    return res.status(code).send(data);
+    try {
+      const { data, code } = await this.authService.checkLogin({ user });
+      return res.status(code).send(data);
+    } catch (e) {
+      console.error(e);
+      res.status(500).send({ message: e.message });
+    }
   }
 }
