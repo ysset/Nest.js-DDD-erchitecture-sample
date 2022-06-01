@@ -203,7 +203,7 @@ export class GameService {
 
     if (cardData.complete) {
       return {
-        data: { messaqge: 'Game has already complete ' },
+        data: { messaqe: 'Game has already complete ' },
         code: 400,
       };
     }

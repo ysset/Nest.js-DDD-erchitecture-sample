@@ -11,7 +11,7 @@ export class User {
   @Prop({ required: true })
   password: string;
 
-  @Prop({ requuired: true })
+  @Prop({ required: true })
   balance: number;
 
   @Prop({ required: true })

@@ -2,9 +2,6 @@ import { Injectable } from '@nestjs/common';
 import * as jsonwebtoken from 'jsonwebtoken';
 import * as bcrypt from 'bcrypt';
 import { UserModelMethods } from '../mongo/methods.service';
-import { InjectModel } from '@nestjs/mongoose';
-import { User, UserDocument } from '../../mongo.models/user.model';
-import { Model } from 'mongoose';
 
 const saltRounds = parseFloat(process.env.SALT);
 const jwtSecret = process.env.JWT_SECRET;
