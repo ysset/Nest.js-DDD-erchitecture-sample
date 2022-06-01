@@ -1,23 +1,36 @@
-import { Post, Get, Controller, Req, Res } from '@nestjs/common';
+import { Post, Get, Controller, Req, Res, Body } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { Request, Response } from 'express';
+import { Response } from 'express';
 
 @Controller('api')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('signup')
-  signUp(@Req() req: Request, @Res() res: Response) {
-    this.authService.signUp({ body: req.body, res });
+  async signUp(@Body() { login, password }, @Res() res: Response) {
+    try {
+      const { code, data } = await this.authService.signUp({ login, password });
+      res.status(code).send(data);
+    } catch (e) {
+      console.log(e);
+      res.status(500).send(e.message);
+    }
   }
 
   @Post('signin')
-  async signIn(@Req() req: Request, @Res() res: Response) {
-    await this.authService.signIn({ body: req.body, res });
+  async signIn(@Body() { login, password }, @Res() res: Response) {
+    try {
+      const { code, data } = await this.authService.signIn({ login, password });
+      res.status(code).send(data);
+    } catch (e) {
+      console.log(e);
+      res.status(500).send(e.message);
+    }
   }
 
   @Get('check')
-  async authCheck(@Req() req: Request, @Res() res: Response) {
-    await this.authService.checkLogin({ req, res });
+  async authCheck(@Body() { user }, @Res() res: Response) {
+    const { data, code } = await this.authService.checkLogin({ user });
+    return res.status(code).send(data);
   }
 }
